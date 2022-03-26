@@ -5,7 +5,9 @@
 #include <cstdlib>
 #include <fstream>
 #include <iostream>
+#include <tuple>
 using namespace std;
+
 
 struct Matrix{
     int startRow;
@@ -16,10 +18,12 @@ struct Matrix{
 
 Matrix* strassen(Matrix* m1, Matrix* m2);
 Matrix* conventionalMult(Matrix* m1, Matrix* m2);
+Matrix** splitMatrices(Matrix* original);
+void combine(Matrix* Product, Matrix* TL, Matrix* TR, Matrix* BL, Matrix* BR);
+Matrix* addMatrices(Matrix* A, Matrix* B, bool subtract);
+void populateMatrices(int** A, int** B, int d, char* inputfile);
+void printMat(int** matrix, int d);
 Matrix* initMatrix(int d);
-Matrix* splitMatrix(int startRow, int startCol);
-void populateMatrices(Matrix* A, Matrix* B, int d, char* inputfile);
-void printMat(Matrix* matrix);
 
 int N_0 = 15;
 
@@ -119,26 +123,90 @@ Matrix* addMatrices(Matrix* A, Matrix* B, bool subtract) {
     return res;
 }
 
-// Matrix* splitMatrix(int startRow, int startCol);
 
-// Matrix* createMatrix(int startRow, int startCol, ){
+Matrix** splitMatrices(Matrix* original){
+    int n = original->dimension;
+    int newDim = n / 2;
 
-// };
+    Matrix* A = (Matrix*) malloc(sizeof(Matrix));
+    A->dimension = newDim;
+    A->startRow = original->startRow;
+    A->startColumn = original->startColumn;
+    A->values = original->values;
 
+    Matrix* B = (Matrix*) malloc(sizeof(Matrix));
+    B->dimension = newDim;
+    B->startRow = original->startRow;
+    B->startColumn = original->startColumn + newDim;
+    B->values = original->values;
+
+    Matrix* C = (Matrix*) malloc(sizeof(Matrix));
+    C->dimension = newDim;
+    C->startRow = original->startRow + newDim;
+    C->startColumn = original->startColumn;
+    C->values = original->values;
+
+    Matrix* D = (Matrix*) malloc(sizeof(Matrix));
+    D->dimension = newDim;
+    D->startRow = original->startRow + newDim;
+    D->startColumn = original->startColumn + newDim;
+    D->values = original->values;
+
+    Matrix** res = (Matrix**) malloc(4 * sizeof(Matrix*));
+    res[0] = A;
+    res[1] = B;
+    res[2] = C;
+    res[3] = D;
+
+    return res;
+};
+
+void combine(Matrix* Product, Matrix* TL, Matrix* TR, Matrix* BL, Matrix* BR){
+    int startRow = Product->startRow;
+    int startCol = Product->startColumn;
+    int halfDim = TL->dimension;
+
+    for (int i = 0; i < halfDim; i++){
+        for (int j = 0; j < halfDim; j++){
+            Product->values[i][j] = TL->values[i][j];
+            
+        }
+    }
+
+    for (int i = 0; i < halfDim; i++){
+        for (int j = 0; j < halfDim; j++){
+            Product->values[i][j + halfDim] = TR->values[i][j];
+        }
+    }
+
+    for (int i = 0; i < halfDim; i++){
+        for (int j = 0; j < halfDim; j++){
+            Product->values[i + halfDim][j] = BL->values[i][j];
+        }
+    }
+
+    for (int i = 0; i < halfDim; i++){
+        for (int j = 0; j < halfDim; j++){
+            Product->values[i + halfDim][j + halfDim] = BR->values[i][j];
+        }
+    }
+}
 
 Matrix* strassen(Matrix* m1, Matrix* m2){
     if (m1->dimension == N_0) {
         return conventionalMult(m1, m1);
     }
-
-    Matrix* A;
-    Matrix* B;
-    Matrix* C;
-    Matrix* D;
-    Matrix* E;
-    Matrix* F;
-    Matrix* G;
-    Matrix* H;
+    
+    Matrix** matrices1 = splitMatrices(m1);
+    Matrix** matrices2 = splitMatrices(m2);
+    Matrix* A = matrices1[0];
+    Matrix* B = matrices1[1];
+    Matrix* C = matrices1[2];
+    Matrix* D = matrices1[3];
+    Matrix* E = matrices2[0];
+    Matrix* F = matrices2[1];
+    Matrix* G = matrices2[2];
+    Matrix* H = matrices2[3];
 
     Matrix* P1 = (Matrix*) malloc(sizeof(Matrix));
     P1 = strassen(A, addMatrices(F, H, true));
@@ -160,6 +228,22 @@ Matrix* strassen(Matrix* m1, Matrix* m2){
 
     Matrix* P7 = (Matrix*) malloc(sizeof(Matrix));
     P7 = strassen(addMatrices(C, A, true), addMatrices(E, F, false));
+
+    /*
+    AE +BG = −P2 +P4 +P5 +P6
+    AF +BH = P1 +P2
+    CE +DG = P3 +P4
+    CF +DH = P1 −P3 +P5 +P7
+    */
+
+    Matrix* topLeft = addMatrices(addMatrices(P4, P2, true), addMatrices(P5, P6, false), false);
+    Matrix* topRight = addMatrices(P1, P2, false);
+    Matrix* bottomLeft = addMatrices(P3, P4, false);
+    Matrix* bottomRight = addMatrices(addMatrices(P1, P3, true), addMatrices(P5, P7, false), false);
+
+    Matrix* Product = initMatrix(m1->dimension);
+    combine(Product, topLeft, topRight, bottomLeft, bottomRight);
+    return Product;
 };
 
 
