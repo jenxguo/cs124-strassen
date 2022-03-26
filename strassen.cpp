@@ -14,12 +14,14 @@ struct Matrix{
     int** values;
 };
 
+int calcPadding(int d);
 Matrix* strassen(Matrix* m1, Matrix* m2);
 Matrix* conventionalMult(Matrix* m1, Matrix* m2);
 Matrix* initMatrix(int d);
 Matrix* splitMatrix(int startRow, int startCol);
 void populateMatrices(Matrix* A, Matrix* B, int d, char* inputfile);
 void printMat(Matrix* matrix);
+void freeMatrix(Matrix* mat);
 
 int N_0 = 15;
 
@@ -35,17 +37,37 @@ int main(int argc, char *argv[]) {
     int d = (int) strtol(argv[2], NULL, 10);
     char *inputfile = argv[3];
 
-    // https://www.geeksforgeeks.org/dynamically-allocate-2d-array-c/
-    // if dimension is power of 2
-    Matrix* A = initMatrix(d);
-    Matrix* B = initMatrix(d);
+    int pad = calcPadding(165);
+    printf("%i\n", pad);
+    // Matrix* A = initMatrix(pad);
+    // Matrix* B = initMatrix(pad);
 
-    populateMatrices(A, B, d, inputfile);
+    // populateMatrices(A, B, d, inputfile);
 
-    printMat(A);
-    printMat(B);
+    // printMat(A);
+    // printMat(B);
 
     return 0;
+}
+
+
+// using https://stackoverflow.com/questions/9908917/optimized-static-padding-for-strassens-odd-matrices
+int calcPadding(int d) {
+    int n = d;
+    int numHalfs = 0;
+    if (d <= N_0) {
+        return d;
+    }
+    while (n > N_0) {
+        numHalfs++;
+        n = (n / 2) + ((n % 2) != 0) ;
+    }
+    // 1<<numHalfs is shorthand for 2^numHalfs
+    if (d == 1<<numHalfs) {
+        return d;
+    } else {
+        return d + (1<<numHalfs) - d % (1<<numHalfs);
+    }
 }
 
 Matrix* initMatrix(int d) {
@@ -162,7 +184,6 @@ Matrix* strassen(Matrix* m1, Matrix* m2){
     P7 = strassen(addMatrices(C, A, true), addMatrices(E, F, false));
 };
 
-
 Matrix* conventionalMult(Matrix* m1, Matrix* m2){
     int d = m1->dimension;
     int ARidx = m1->startRow;
@@ -180,3 +201,11 @@ Matrix* conventionalMult(Matrix* m1, Matrix* m2){
     }
     return res;
 };
+
+void freeMatrix(Matrix* mat) {
+	for (int i = 0; i < mat->dimension; i++) {
+		free(mat->values[i]);
+	}
+	free(mat->values);
+	free(mat);
+}
