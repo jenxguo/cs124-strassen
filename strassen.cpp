@@ -5,6 +5,16 @@
 #include <cstdlib>
 using namespace std;
 
+int** strassen(int** m1, int** m2, int n);
+int** bruteForce(int** m1, int** m2, int n);
+
+struct Matrix{
+    int startRow;
+    int startColumn;
+    int dimension;
+    int** values;
+};
+
 int main(int argc, char *argv[]) {
 
     //checks that there are command line args
@@ -15,3 +25,5 @@ int main(int argc, char *argv[]) {
     }
     return 0;
 }
+
+
