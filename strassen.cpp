@@ -7,19 +7,21 @@
 #include <iostream>
 using namespace std;
 
+Matrix* strassen(Matrix* m1, Matrix* m2);
+Matrix* bruteForce(Matrix* m1, Matrix* m2);
+Matrix* splitMatrix(int startRow, int startCol);
+void populateMatrices(int** A, int** B, int d, char* inputfile);
+void printMat(int** matrix, int d);
+Matrix* initMatrix(int d);
+
 struct Matrix{
     int startRow;
     int startColumn;
     int dimension;
-    int** values;
+    int** numbers;
 };
 
-int** strassen(int** m1, int** m2, int n);
-int** bruteForce(int** m1, int** m2, int n);
-Matrix* initMatrix(int d);
-void populateMatrices(Matrix* A, Matrix* B, int d, char* inputfile);
-Matrix* addMatrices(Matrix* A, Matrix* B, bool subtract);
-void printMat(Matrix* matrix, int d);
+int N_0 = 15;
 
 int main(int argc, char *argv[]) {
 
@@ -117,3 +119,49 @@ Matrix* addMatrices(Matrix* A, Matrix* B, bool subtract) {
 }
 
 Matrix* splitMatrices()
+
+Matrix* createMatrix(int startRow, int startCol, ){
+
+};
+
+
+Matrix* strassen(Matrix* m1, Matrix* m2){
+    if (m1->dimension == N_0) {
+        return bruteForce(m1, m1);
+    }
+
+    Matrix* A;
+    Matrix* B;
+    Matrix* C;
+    Matrix* D;
+    Matrix* E;
+    Matrix* F;
+    Matrix* G;
+    Matrix* H;
+
+    Matrix* P1 = malloc(sizeof(Matrix));
+    P1 = strassen(A, addMatrices(F, H, true));
+
+    Matrix* P2 = malloc(sizeof(Matrix));
+    P2 = strassen(addMatrices(A, B, false), H);
+
+    Matrix* P3 = malloc(sizeof(Matrix));
+    P3 = strassen(addMatrices(C, D, false), E);
+
+    Matrix* P4 = malloc(sizeof(Matrix));
+    P4 = strassen(D, addMatrices(G, E, true));
+
+    Matrix* P5 = malloc(sizeof(Matrix));
+    P5 = strassen(addMatrices(A, D, false), addMatrices(E, H, false));
+
+    Matrix* P6 = malloc(sizeof(Matrix));
+    P6 = strassen(addMatrices(B, D, false), addMatrices(G, H, false));
+
+    Matrix* P7 = malloc(sizeof(Matrix));
+    P7 = strassen(addMatrices(C, A, true), addMatrices(E, F, false));
+};
+
+
+Matrix* bruteForce(Matrix* m1, Matrix* m2){
+
+};
