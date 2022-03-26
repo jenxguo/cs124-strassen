@@ -74,3 +74,10 @@ void printMat(int** matrix, int d) {
     printf("\n");
   }
 }
+
+int** addMatrices(int** A, int** B, int d, bool subtract) {
+    int** res = (int**) malloc(sizeof(int*) * d);
+    for (int i = 0; i < d; i++) {
+        res[i] = (int*) malloc(d * sizeof(int));
+    }
+}
