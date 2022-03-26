@@ -22,12 +22,12 @@ Matrix* conventionalMult(Matrix* m1, Matrix* m2);
 Matrix** splitMatrices(Matrix* original);
 void combine(Matrix* Product, Matrix* TL, Matrix* TR, Matrix* BL, Matrix* BR);
 Matrix* addMatrices(Matrix* A, Matrix* B, bool subtract);
-void populateMatrices(int** A, int** B, int d, char* inputfile);
-void printMat(int** matrix, int d);
+void populateMatrices(Matrix* A, Matrix* B, int d, char* inputfile);
+void printMat(Matrix* mat);
 Matrix* initMatrix(int d);
 void freeMatrix(Matrix* mat);
 
-int N_0 = 15;
+int N_0 = 3;
 
 int main(int argc, char *argv[]) {
 
@@ -49,7 +49,13 @@ int main(int argc, char *argv[]) {
     populateMatrices(A, B, d, inputfile);
 
     printMat(A);
+    printf("\n");
     printMat(B);
+    printf("\n");
+
+    Matrix* res = conventionalMult(A, B);
+
+    printMat(res);
 
     return 0;
 }
@@ -178,8 +184,6 @@ Matrix** splitMatrices(Matrix* original){
 };
 
 void combine(Matrix* Product, Matrix* TL, Matrix* TR, Matrix* BL, Matrix* BR){
-    int startRow = Product->startRow;
-    int startCol = Product->startColumn;
     int halfDim = TL->dimension;
 
     for (int i = 0; i < halfDim; i++){
@@ -209,8 +213,8 @@ void combine(Matrix* Product, Matrix* TL, Matrix* TR, Matrix* BL, Matrix* BR){
 }
 
 Matrix* strassen(Matrix* m1, Matrix* m2){
-    if (m1->dimension == N_0) {
-        return conventionalMult(m1, m1);
+    if (m1->dimension <= N_0) {
+        return conventionalMult(m1, m2);
     }
     
     Matrix** matrices1 = splitMatrices(m1);
