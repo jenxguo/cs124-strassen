@@ -14,12 +14,14 @@ struct Matrix{
     int** values;
 };
 
-int** strassen(int** m1, int** m2, int n);
-int** bruteForce(int** m1, int** m2, int n);
+Matrix* strassen(Matrix* m1, Matrix* m2);
+Matrix* conventionalMult(Matrix* m1, Matrix* m2);
 Matrix* initMatrix(int d);
+Matrix* splitMatrix(int startRow, int startCol);
 void populateMatrices(Matrix* A, Matrix* B, int d, char* inputfile);
-Matrix* addMatrices(Matrix* A, Matrix* B, bool subtract);
-void printMat(Matrix* matrix, int d);
+void printMat(Matrix* matrix);
+
+int N_0 = 15;
 
 int main(int argc, char *argv[]) {
 
@@ -40,8 +42,8 @@ int main(int argc, char *argv[]) {
 
     populateMatrices(A, B, d, inputfile);
 
-    printMat(A, d);
-    printMat(B, d);
+    printMat(A);
+    printMat(B);
 
     return 0;
 }
@@ -85,18 +87,19 @@ void populateMatrices(Matrix* A, Matrix* B, int d, char* inputfile) {
     fclose(file);
 }
 
-void printMat(Matrix* mat, int d) {
-  for (int i = mat->startRow; i < d; i++) {
-    for (int j = mat->startColumn; j < d; j++)
-      printf("%i ", mat->values[i][j]);
-    printf("\n");
-  }
+void printMat(Matrix* mat) {
+    int d = mat->dimension;
+    for (int i = mat->startRow; i < d; i++) {
+        for (int j = mat->startColumn; j < d; j++)
+        printf("%i ", mat->values[i][j]);
+        printf("\n");
+    }
 }
 
 Matrix* addMatrices(Matrix* A, Matrix* B, bool subtract) {
     if (A->dimension != B->dimension) {
         printf("Error with adding matrices.\n");
-        return;
+        return NULL;
     }
     int d = A->dimension;
     Matrix* res = initMatrix(d);
@@ -115,3 +118,65 @@ Matrix* addMatrices(Matrix* A, Matrix* B, bool subtract) {
     }
     return res;
 }
+
+// Matrix* splitMatrix(int startRow, int startCol);
+
+// Matrix* createMatrix(int startRow, int startCol, ){
+
+// };
+
+
+Matrix* strassen(Matrix* m1, Matrix* m2){
+    if (m1->dimension == N_0) {
+        return conventionalMult(m1, m1);
+    }
+
+    Matrix* A;
+    Matrix* B;
+    Matrix* C;
+    Matrix* D;
+    Matrix* E;
+    Matrix* F;
+    Matrix* G;
+    Matrix* H;
+
+    Matrix* P1 = (Matrix*) malloc(sizeof(Matrix));
+    P1 = strassen(A, addMatrices(F, H, true));
+
+    Matrix* P2 = (Matrix*) malloc(sizeof(Matrix));
+    P2 = strassen(addMatrices(A, B, false), H);
+
+    Matrix* P3 = (Matrix*) malloc(sizeof(Matrix));
+    P3 = strassen(addMatrices(C, D, false), E);
+
+    Matrix* P4 = (Matrix*) malloc(sizeof(Matrix));
+    P4 = strassen(D, addMatrices(G, E, true));
+
+    Matrix* P5 = (Matrix*) malloc(sizeof(Matrix));
+    P5 = strassen(addMatrices(A, D, false), addMatrices(E, H, false));
+
+    Matrix* P6 = (Matrix*) malloc(sizeof(Matrix));
+    P6 = strassen(addMatrices(B, D, false), addMatrices(G, H, false));
+
+    Matrix* P7 = (Matrix*) malloc(sizeof(Matrix));
+    P7 = strassen(addMatrices(C, A, true), addMatrices(E, F, false));
+};
+
+
+Matrix* conventionalMult(Matrix* m1, Matrix* m2){
+    int d = m1->dimension;
+    int ARidx = m1->startRow;
+    int ACidx = m1->startColumn;
+    int BRidx = m2->startRow;
+    int BCidx = m2->startColumn;
+    Matrix* res = initMatrix(d);
+    for (int i = 0; i < d; i++) {
+        for (int j = 0; j < d; j++) {
+            res->values[i][j] = 0;
+            for (int k = 0; k < d; k++) {
+                res->values[i][j] += m1->values[ARidx + i][ACidx + k] * m2->values[BRidx + k][BCidx + j];
+            }
+        }
+    }
+    return res;
+};
