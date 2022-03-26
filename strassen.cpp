@@ -249,6 +249,10 @@ Matrix* strassen(Matrix* m1, Matrix* m2){
     Matrix* P7 = (Matrix*) malloc(sizeof(Matrix));
     P7 = strassen(addMatrices(C, A, true), addMatrices(E, F, false));
 
+    // free array holding split matrices
+    free(matrices1);
+    free(matrices2);
+
     /*
     AE +BG = −P2 +P4 +P5 +P6
     AF +BH = P1 +P2
