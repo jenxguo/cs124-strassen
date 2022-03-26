@@ -115,5 +115,3 @@ Matrix* addMatrices(Matrix* A, Matrix* B, bool subtract) {
     }
     return res;
 }
-
-Matrix* splitMatrices()
