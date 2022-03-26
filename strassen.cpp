@@ -7,8 +7,19 @@
 #include <iostream>
 using namespace std;
 
-void populateMatrices(int** A, int** B, int d, char* inputfile);
-void printMat(int** matrix, int d);
+struct Matrix{
+    int startRow;
+    int startColumn;
+    int dimension;
+    int** values;
+};
+
+int** strassen(int** m1, int** m2, int n);
+int** bruteForce(int** m1, int** m2, int n);
+Matrix* initMatrix(int d);
+void populateMatrices(Matrix* A, Matrix* B, int d, char* inputfile);
+Matrix* addMatrices(Matrix* A, Matrix* B, bool subtract);
+void printMat(Matrix* matrix, int d);
 
 int main(int argc, char *argv[]) {
 
@@ -24,14 +35,8 @@ int main(int argc, char *argv[]) {
 
     // https://www.geeksforgeeks.org/dynamically-allocate-2d-array-c/
     // if dimension is power of 2
-    int** A = (int**) malloc(sizeof(int*) * d);
-    for (int i = 0; i < d; i++) {
-        A[i] = (int*) malloc(d * sizeof(int));
-    }
-    int** B = (int**) malloc(sizeof(int*) * d);
-    for (int i = 0; i < d; i++) {
-        B[i] = (int*) malloc(d * sizeof(int));
-    }
+    Matrix* A = initMatrix(d);
+    Matrix* B = initMatrix(d);
 
     populateMatrices(A, B, d, inputfile);
 
@@ -41,7 +46,20 @@ int main(int argc, char *argv[]) {
     return 0;
 }
 
-void populateMatrices(int** A, int** B, int d, char* inputfile) {
+Matrix* initMatrix(int d) {
+    Matrix* mat = (Matrix*) malloc(sizeof(Matrix));
+    mat->dimension = d;
+    mat->startRow = 0;
+    mat->startColumn = 0;
+    int** A = (int**) malloc(sizeof(int*) * d);
+    for (int i = 0; i < d; i++) {
+        A[i] = (int*) malloc(d * sizeof(int));
+    }
+    mat->values = A;
+    return mat;
+}
+
+void populateMatrices(Matrix* A, Matrix* B, int d, char* inputfile) {
     FILE* file = fopen(inputfile, "r");
     if (file == NULL) {
         printf("File could not be opened.\n");
@@ -53,7 +71,7 @@ void populateMatrices(int** A, int** B, int d, char* inputfile) {
         for (int j = 0; j < d; j++) {
             fscanf(file, "%s\n", line);
             int el = strtol(line, NULL, 10);
-            A[i][j] = el;
+            A->values[i][j] = el;
         }
     }
     // populate matrix B
@@ -61,23 +79,41 @@ void populateMatrices(int** A, int** B, int d, char* inputfile) {
         for (int j = 0; j < d; j++) {
             fscanf(file, "%s\n", line);
             int el = strtol(line, NULL, 10);
-            B[i][j] = el;
+            B->values[i][j] = el;
         }
     }
     fclose(file);
 }
 
-void printMat(int** matrix, int d) {
-  for (int i = 0; i < d; ++i) {
-    for (int j = 0; j < d; ++j)
-      printf("%i ", matrix[i][j]);
+void printMat(Matrix* mat, int d) {
+  for (int i = mat->startRow; i < d; i++) {
+    for (int j = mat->startColumn; j < d; j++)
+      printf("%i ", mat->values[i][j]);
     printf("\n");
   }
 }
 
-int** addMatrices(int** A, int** B, int d, bool subtract) {
-    int** res = (int**) malloc(sizeof(int*) * d);
-    for (int i = 0; i < d; i++) {
-        res[i] = (int*) malloc(d * sizeof(int));
+Matrix* addMatrices(Matrix* A, Matrix* B, bool subtract) {
+    if (A->dimension != B->dimension) {
+        printf("Error with adding matrices.\n");
+        return;
     }
+    int d = A->dimension;
+    Matrix* res = initMatrix(d);
+    int ARidx = A->startRow;
+    int ACidx = A->startColumn;
+    int BRidx = B->startRow;
+    int BCidx = B->startColumn;
+    for (int i = 0; i < d; i++) {
+        for (int j = 0; j < d; j++) {
+            if (subtract) {
+                res->values[i][j] = A->values[ARidx + i][ACidx + j] - B->values[BRidx + i][BCidx + j];
+            } else {
+                res->values[i][j] = A->values[ARidx + i][ACidx + j] + B->values[BRidx + i][BCidx + j];
+            }
+        }
+    }
+    return res;
 }
+
+Matrix* splitMatrices()
