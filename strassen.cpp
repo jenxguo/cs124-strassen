@@ -27,14 +27,14 @@ void printMat(Matrix* mat);
 Matrix* initMatrix(int d);
 void freeMatrix(Matrix* mat);
 
-int N_0 = 3;
+int N_0 = 2;
 
 int main(int argc, char *argv[]) {
 
     //checks that there are command line args
     if (argc != 4)
     {
-        cout << "Usage: ./randmst 0 dimension inputfile\n";
+        cout << "Usage: ./strassen 0 dimension inputfile\n";
         return 1;
     }
 
@@ -53,9 +53,13 @@ int main(int argc, char *argv[]) {
     printMat(B);
     printf("\n");
 
-    Matrix* res = conventionalMult(A, B);
+    Matrix* C = strassen(A, B);
+    printf("\n");
+    printMat(C);
 
-    printMat(res);
+    // Matrix* D = conventionalMult(A, B);
+    // printf("\n");
+    // printMat(D);
 
     return 0;
 }
@@ -115,9 +119,10 @@ void populateMatrices(Matrix* A, Matrix* B, int d, char* inputfile) {
 
 void printMat(Matrix* mat) {
     int d = mat->dimension;
-    for (int i = mat->startRow; i < d; i++) {
-        for (int j = mat->startColumn; j < d; j++)
-        printf("%i ", mat->values[i][j]);
+    for (int i = mat->startRow; i < mat->startRow + d; i++) {
+        for (int j = mat->startColumn; j < mat->startColumn + d; j++){
+            printf("%i ", mat->values[i][j]);
+        }
         printf("\n");
     }
 }
@@ -175,7 +180,7 @@ Matrix** splitMatrices(Matrix* original){
     D->values = original->values;
 
     Matrix** res = (Matrix**) malloc(4 * sizeof(Matrix*));
-    res[0] = A;
+    res[0] = A;   
     res[1] = B;
     res[2] = C;
     res[3] = D;
@@ -228,6 +233,7 @@ Matrix* strassen(Matrix* m1, Matrix* m2){
     Matrix* G = matrices2[2];
     Matrix* H = matrices2[3];
 
+
     Matrix* P1 = (Matrix*) malloc(sizeof(Matrix));
     P1 = strassen(A, addMatrices(F, H, true));
 
@@ -244,7 +250,7 @@ Matrix* strassen(Matrix* m1, Matrix* m2){
     P5 = strassen(addMatrices(A, D, false), addMatrices(E, H, false));
 
     Matrix* P6 = (Matrix*) malloc(sizeof(Matrix));
-    P6 = strassen(addMatrices(B, D, false), addMatrices(G, H, false));
+    P6 = strassen(addMatrices(B, D, true), addMatrices(G, H, false));
 
     Matrix* P7 = (Matrix*) malloc(sizeof(Matrix));
     P7 = strassen(addMatrices(C, A, true), addMatrices(E, F, false));
@@ -267,6 +273,16 @@ Matrix* strassen(Matrix* m1, Matrix* m2){
 
     Matrix* Product = initMatrix(m1->dimension);
     combine(Product, topLeft, topRight, bottomLeft, bottomRight);
+
+    // free intermediate matrices
+    freeMatrix(P1);
+    freeMatrix(P2);
+    freeMatrix(P3);
+    freeMatrix(P4);
+    freeMatrix(P5);
+    freeMatrix(P6);
+    freeMatrix(P7);
+
     return Product;
 };
 
