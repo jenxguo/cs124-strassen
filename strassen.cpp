@@ -30,6 +30,7 @@ Matrix* addMatrices(Matrix* A, Matrix* B, bool subtract);
 void populateMatrices(Matrix* A, Matrix* B, int d, char* inputfile);
 void printMat(Matrix* mat);
 void freeMatrix(Matrix* mat);
+bool checkCorrectness(Matrix* A, Matrix* B);
 
 // Transition value of n to start using conventional mult alg
 int N_0 = 15;
@@ -51,43 +52,75 @@ int main(int argc, char *argv[]) {
     Matrix* A;
     Matrix* B;
     // Recursive Padding Method
-    if (flag == 1) {
+    if (flag == 1 || flag == 3) {
         A = initMatrix(d);
         B = initMatrix(d);
     }
     // Initial Padding Method
     else {
         int pad = calcPadding(d);
-        printf("padding %i\n", pad);
+        printf("Padding: %i\n", pad);
 
         A = initMatrix(pad);
         B = initMatrix(pad);
     }
 
-    populateMatrices(A, B, d, inputfile);
+    if (flag == 0 || flag == 1) {
+        populateMatrices(A, B, d, inputfile);
+    } else {
+        generateRandomMatrix(A, d, -1);
+        generateRandomMatrix(B, d, -1);
+    }
 
-    // generateRandomMatrix(A, 50, -1);
-    // generateRandomMatrix(B, 50, -1);
-
-    printMat(A);
-    printf("\n");
-    printMat(B);
-    printf("\n");
+    // printMat(A);
+    // printf("\n");
+    // printMat(B);
+    // printf("\n");
 
     Matrix* C = strassen(A, B, flag);
-    if (flag != 1) {
+    // printf("dimensions of strassen %i\n", C->dimension);
+    if (flag != 1 && flag != 3) {
         C->dimension = d;
     }
 
-    printf("\n");
-    printMat(C);
+    // printf("\n");
+    // printMat(C);
 
-    printf("THE CORRECT ONE\n");
+    // printf("THE CORRECT ONE\n");
     Matrix* D = conventionalMult(A, B);
-    printf("\n");
-    printMat(D);
+    // printf("dimensions of orrect %i\n", D->dimension);
+    // printf("\n");
+    if (flag != 1 && flag != 3) {
+        D->dimension = d;
+    }
+    // printMat(D);
+
+    if (checkCorrectness(C, D)) {
+        printf("CORRECT\n");
+    } else {
+        printf("INCORRECT :( FUUUUU\n");
+    }
 
     return 0;
+}
+
+bool checkCorrectness(Matrix* A, Matrix* B) {
+    int d = A->dimension;
+    if (d != B->dimension) {
+        return false;
+    }
+    int ARidx = A->startRow;
+    int ACidx = A->startColumn;
+    int BRidx = B->startRow;
+    int BCidx = B->startColumn;
+    for (int i = 0; i < d; i++) {
+        for (int j = 0; j < d; j++) {
+            if (A->values[ARidx + i][ACidx + j] != B->values[BRidx + i][BCidx + j]) {
+                return false;
+            }
+        }
+    }
+    return true;
 }
 
 // Calculate dimensions for padded matrix in initial padding method
