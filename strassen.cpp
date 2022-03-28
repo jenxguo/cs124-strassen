@@ -19,6 +19,7 @@ struct Matrix{
 int calcPadding(int d);
 Matrix* strassen(Matrix* m1, Matrix* m2, int flag);
 Matrix* conventionalMult(Matrix* m1, Matrix* m2);
+int countTriangles(double p, int flag);
 
 // Matrix Functions
 void generateRandomMatrix(Matrix* mat, int d, int offset);
@@ -104,6 +105,18 @@ int main(int argc, char *argv[]) {
     } else {
         printf("INCORRECT :( FUUUUU\n");
     }
+
+    // // THE TRIANGLE BS
+    // // expected 178
+    // printf("NumTriangles for p = .01: %i\n", countTriangles(.01, flag));
+    // // expected 1427
+    // printf("NumTriangles for p = .02: %i\n", countTriangles(.02, flag));
+    // // expected 4818
+    // printf("NumTriangles for p = .03: %i\n", countTriangles(.03, flag));
+    // // expected 11420
+    // printf("NumTriangles for p = .04: %i\n", countTriangles(.04, flag));
+    // // expected 22304
+    // printf("NumTriangles for p = .05: %i\n", countTriangles(.05, flag));
 
     return 0;
 }
@@ -311,7 +324,7 @@ Matrix* strassen(Matrix* m1, Matrix* m2, int flag){
     Matrix* newm2;
 
     // pad if odd d
-    if (flag == 1 && (d % 2) == 1) {
+    if ((flag == 1 || flag == 3) && (d % 2) == 1) {
         newm1 = initMatrix(d+1);
         newm2 = initMatrix(d+1);
         copyMatrix(m1, newm1);
@@ -374,7 +387,7 @@ Matrix* strassen(Matrix* m1, Matrix* m2, int flag){
     combine(Product, topLeft, topRight, bottomLeft, bottomRight);
 
     // get rid of extra 0 dimension if padded
-    if (flag == 1 && m1->dimension % 2 == 1) {
+    if ((flag == 1 || flag == 3) && m1->dimension % 2 == 1) {
         Product->dimension--;
         // I... don't think freeing it here works but idkidk we have to free these at some point tho idk
         // freeMatrix(m1);
@@ -422,6 +435,30 @@ void generateRandomMatrix(Matrix* mat, int d, int offset) {
             mat->values[i][j] = el;
         }
     }
+}
+
+int countTriangles(double p, int flag) {
+    srand (static_cast <unsigned> (time(0)));
+    int size = 1024;
+    Matrix* graph = initMatrix(size);
+    for (int i = 0; i < size; i++) {
+        for (int j = 0; j < size; j++) {
+            int el;
+            if (rand() <  p * ((double)RAND_MAX + 1.0)) {
+                el = 1;
+            } else {
+                el = 0;
+            }
+            graph->values[i][j] = el;
+        }
+    }
+    Matrix* graphSquared = strassen(graph, graph, flag);
+    Matrix* graphCubed = strassen(graphSquared, graph, flag);
+    int diagonalSum = 0;
+    for (int i = 0; i < size; i++) {
+        diagonalSum += graphCubed->values[i][i];
+    }
+    return diagonalSum / 6;
 }
 
 // Frees matrix
