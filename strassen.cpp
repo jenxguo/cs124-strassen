@@ -28,7 +28,8 @@ void printMat(Matrix* mat);
 Matrix* initMatrix(int d);
 void freeMatrix(Matrix* mat);
 
-int N_0 = 2;
+// Transition value of n to start using conventional mult alg
+int N_0 = 3;
 
 int main(int argc, char *argv[]) {
 
@@ -71,7 +72,6 @@ int main(int argc, char *argv[]) {
         C->dimension = d;
     }
 
-
     printf("\n");
     printMat(C);
 
@@ -82,7 +82,7 @@ int main(int argc, char *argv[]) {
     return 0;
 }
 
-// initial padding method
+// Calculate dimensions for padded matrix in initial padding method
 int calcPadding(int d) {
     if (d <= N_0) {
         return d;
@@ -97,6 +97,7 @@ int calcPadding(int d) {
     return n;
 }
 
+// Initialize empty matrix object of 0s with dimension d
 Matrix* initMatrix(int d) {
     Matrix* mat = (Matrix*) malloc(sizeof(Matrix));
     mat->dimension = d;
@@ -110,15 +111,21 @@ Matrix* initMatrix(int d) {
     return mat;
 }
 
+// Copy values from old matrix to new matrix
 void copyMatrix(Matrix* oldMat, Matrix* newMat) {
     int d = oldMat->dimension;
+    if (newMat->dimension < d) {
+        printf("Error copying matrices\n");
+        return;
+    }
     for (int i = 0; i < d; i++) {
         for (int j = 0; j < d; j++) {
-            newMat->values[i][j] = oldMat->values[i][j];
+            newMat->values[i][j] = oldMat->values[oldMat->startRow + i][oldMat->startColumn + j];
         }
     }
 }
 
+// Populate values into two matrices from input file
 void populateMatrices(Matrix* A, Matrix* B, int d, char* inputfile) {
     FILE* file = fopen(inputfile, "r");
     if (file == NULL) {
@@ -145,6 +152,7 @@ void populateMatrices(Matrix* A, Matrix* B, int d, char* inputfile) {
     fclose(file);
 }
 
+// Prints matrix to console
 void printMat(Matrix* mat) {
     int d = mat->dimension;
     for (int i = mat->startRow; i < mat->startRow + d; i++) {
@@ -155,6 +163,7 @@ void printMat(Matrix* mat) {
     }
 }
 
+// Adds matrix A and B with flag for subtraction if subtract = true
 Matrix* addMatrices(Matrix* A, Matrix* B, bool subtract) {
     if (A->dimension != B->dimension) {
         printf("Error with adding matrices.\n");
@@ -178,7 +187,7 @@ Matrix* addMatrices(Matrix* A, Matrix* B, bool subtract) {
     return res;
 }
 
-
+// Returns array of 4 split matrices from original matrix
 Matrix** splitMatrices(Matrix* original){
     int n = original->dimension;
     int newDim = n / 2;
@@ -216,6 +225,7 @@ Matrix** splitMatrices(Matrix* original){
     return res;
 };
 
+// Combines 4 matrices to one big matrix
 void combine(Matrix* Product, Matrix* TL, Matrix* TR, Matrix* BL, Matrix* BR){
     int halfDim = TL->dimension;
 
@@ -245,6 +255,7 @@ void combine(Matrix* Product, Matrix* TL, Matrix* TR, Matrix* BL, Matrix* BR){
     }
 }
 
+// main Strassen's algorithm to multiply matrices
 Matrix* strassen(Matrix* m1, Matrix* m2, int flag){
     int d = m1->dimension;
     if (d <= N_0) {
@@ -320,8 +331,9 @@ Matrix* strassen(Matrix* m1, Matrix* m2, int flag){
     // get rid of extra 0 dimension if padded
     if (flag == 1 && m1->dimension % 2 == 1) {
         Product->dimension--;
-        freeMatrix(m1);
-        freeMatrix(m2);
+        // I... don't think freeing it here works but idkidk we have to free these at some point tho idk
+        // freeMatrix(m1);
+        // freeMatrix(m2);
     }
 
     // free intermediate matrices
@@ -336,6 +348,7 @@ Matrix* strassen(Matrix* m1, Matrix* m2, int flag){
     return Product;
 };
 
+// Conventional algorithm to multiply matrices
 Matrix* conventionalMult(Matrix* m1, Matrix* m2){
     int d = m1->dimension;
     int ARidx = m1->startRow;
@@ -354,6 +367,7 @@ Matrix* conventionalMult(Matrix* m1, Matrix* m2){
     return res;
 };
 
+// Frees matrix
 void freeMatrix(Matrix* mat) {
 	for (int i = 0; i < mat->dimension; i++) {
 		free(mat->values[i]);
