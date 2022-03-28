@@ -17,8 +17,9 @@ struct Matrix{
 };
 
 int calcPadding(int d);
-Matrix* strassen(Matrix* m1, Matrix* m2);
+Matrix* strassen(Matrix* m1, Matrix* m2, int flag);
 Matrix* conventionalMult(Matrix* m1, Matrix* m2);
+void copyMatrix(Matrix* oldMat, Matrix* newMat);
 Matrix** splitMatrices(Matrix* original);
 void combine(Matrix* Product, Matrix* TL, Matrix* TR, Matrix* BL, Matrix* BR);
 Matrix* addMatrices(Matrix* A, Matrix* B, bool subtract);
@@ -38,13 +39,25 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
+    // flag 1 is recursive padding method
+    int flag = (int) strtol(argv[1], NULL, 10);
     int d = (int) strtol(argv[2], NULL, 10);
     char *inputfile = argv[3];
 
-    int pad = calcPadding(d);
+    Matrix* A;
+    Matrix* B;
+    // Recursive Padding Method
+    if (flag == 1) {
+        A = initMatrix(d);
+        B = initMatrix(d);
+    }
+    // Initial Padding Method
+    else {
+        int pad = calcPadding(d);
 
-    Matrix* A = initMatrix(pad);
-    Matrix* B = initMatrix(pad);
+        A = initMatrix(pad);
+        B = initMatrix(pad);
+    }
 
     populateMatrices(A, B, d, inputfile);
 
@@ -53,7 +66,12 @@ int main(int argc, char *argv[]) {
     printMat(B);
     printf("\n");
 
-    Matrix* C = strassen(A, B);
+    Matrix* C = strassen(A, B, flag);
+    if (flag != 1) {
+        C->dimension = d;
+    }
+
+
     printf("\n");
     printMat(C);
 
@@ -64,6 +82,7 @@ int main(int argc, char *argv[]) {
     return 0;
 }
 
+// initial padding method
 int calcPadding(int d) {
     if (d <= N_0) {
         return d;
@@ -89,6 +108,15 @@ Matrix* initMatrix(int d) {
     }
     mat->values = A;
     return mat;
+}
+
+void copyMatrix(Matrix* oldMat, Matrix* newMat) {
+    int d = oldMat->dimension;
+    for (int i = 0; i < d; i++) {
+        for (int j = 0; j < d; j++) {
+            newMat->values[i][j] = oldMat->values[i][j];
+        }
+    }
 }
 
 void populateMatrices(Matrix* A, Matrix* B, int d, char* inputfile) {
@@ -217,13 +245,28 @@ void combine(Matrix* Product, Matrix* TL, Matrix* TR, Matrix* BL, Matrix* BR){
     }
 }
 
-Matrix* strassen(Matrix* m1, Matrix* m2){
-    if (m1->dimension <= N_0) {
+Matrix* strassen(Matrix* m1, Matrix* m2, int flag){
+    int d = m1->dimension;
+    if (d <= N_0) {
         return conventionalMult(m1, m2);
     }
+
+    Matrix* newm1;
+    Matrix* newm2;
+
+    // pad if odd d
+    if (flag == 1 && (d % 2) == 1) {
+        newm1 = initMatrix(d+1);
+        newm2 = initMatrix(d+1);
+        copyMatrix(m1, newm1);
+        copyMatrix(m2, newm2);
+    } else {
+        newm1 = m1;
+        newm2 = m2;
+    }
     
-    Matrix** matrices1 = splitMatrices(m1);
-    Matrix** matrices2 = splitMatrices(m2);
+    Matrix** matrices1 = splitMatrices(newm1);
+    Matrix** matrices2 = splitMatrices(newm2);
     Matrix* A = matrices1[0];
     Matrix* B = matrices1[1];
     Matrix* C = matrices1[2];
@@ -235,25 +278,25 @@ Matrix* strassen(Matrix* m1, Matrix* m2){
 
 
     Matrix* P1 = (Matrix*) malloc(sizeof(Matrix));
-    P1 = strassen(A, addMatrices(F, H, true));
+    P1 = strassen(A, addMatrices(F, H, true), flag);
 
     Matrix* P2 = (Matrix*) malloc(sizeof(Matrix));
-    P2 = strassen(addMatrices(A, B, false), H);
+    P2 = strassen(addMatrices(A, B, false), H, flag);
 
     Matrix* P3 = (Matrix*) malloc(sizeof(Matrix));
-    P3 = strassen(addMatrices(C, D, false), E);
+    P3 = strassen(addMatrices(C, D, false), E, flag);
 
     Matrix* P4 = (Matrix*) malloc(sizeof(Matrix));
-    P4 = strassen(D, addMatrices(G, E, true));
+    P4 = strassen(D, addMatrices(G, E, true), flag);
 
     Matrix* P5 = (Matrix*) malloc(sizeof(Matrix));
-    P5 = strassen(addMatrices(A, D, false), addMatrices(E, H, false));
+    P5 = strassen(addMatrices(A, D, false), addMatrices(E, H, false), flag);
 
     Matrix* P6 = (Matrix*) malloc(sizeof(Matrix));
-    P6 = strassen(addMatrices(B, D, true), addMatrices(G, H, false));
+    P6 = strassen(addMatrices(B, D, true), addMatrices(G, H, false), flag);
 
     Matrix* P7 = (Matrix*) malloc(sizeof(Matrix));
-    P7 = strassen(addMatrices(C, A, true), addMatrices(E, F, false));
+    P7 = strassen(addMatrices(C, A, true), addMatrices(E, F, false), flag);
 
     // free array holding split matrices
     free(matrices1);
@@ -271,8 +314,15 @@ Matrix* strassen(Matrix* m1, Matrix* m2){
     Matrix* bottomLeft = addMatrices(P3, P4, false);
     Matrix* bottomRight = addMatrices(addMatrices(P1, P3, true), addMatrices(P5, P7, false), false);
 
-    Matrix* Product = initMatrix(m1->dimension);
+    Matrix* Product = initMatrix(newm1->dimension);
     combine(Product, topLeft, topRight, bottomLeft, bottomRight);
+
+    // get rid of extra 0 dimension if padded
+    if (flag == 1 && m1->dimension % 2 == 1) {
+        Product->dimension--;
+        freeMatrix(m1);
+        freeMatrix(m2);
+    }
 
     // free intermediate matrices
     freeMatrix(P1);
