@@ -44,7 +44,11 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    // flag 1 is recursive padding method
+    // FLAG CODE
+    // 0: input file, initial padding method
+    // 1: input file, recursive padding method
+    // 2: generate random matrices, initial padding method
+    // 3: generate random matrices, recursive padding method
     int flag = (int) strtol(argv[1], NULL, 10);
     int d = (int) strtol(argv[2], NULL, 10);
     char *inputfile = argv[3];
