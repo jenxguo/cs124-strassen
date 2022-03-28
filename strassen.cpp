@@ -19,17 +19,20 @@ struct Matrix{
 int calcPadding(int d);
 Matrix* strassen(Matrix* m1, Matrix* m2, int flag);
 Matrix* conventionalMult(Matrix* m1, Matrix* m2);
+
+// Matrix Functions
+void generateRandomMatrix(Matrix* mat, int d, int offset);
+Matrix* initMatrix(int d);
 void copyMatrix(Matrix* oldMat, Matrix* newMat);
 Matrix** splitMatrices(Matrix* original);
 void combine(Matrix* Product, Matrix* TL, Matrix* TR, Matrix* BL, Matrix* BR);
 Matrix* addMatrices(Matrix* A, Matrix* B, bool subtract);
 void populateMatrices(Matrix* A, Matrix* B, int d, char* inputfile);
 void printMat(Matrix* mat);
-Matrix* initMatrix(int d);
 void freeMatrix(Matrix* mat);
 
 // Transition value of n to start using conventional mult alg
-int N_0 = 3;
+int N_0 = 15;
 
 int main(int argc, char *argv[]) {
 
@@ -55,12 +58,16 @@ int main(int argc, char *argv[]) {
     // Initial Padding Method
     else {
         int pad = calcPadding(d);
+        printf("padding %i\n", pad);
 
         A = initMatrix(pad);
         B = initMatrix(pad);
     }
 
     populateMatrices(A, B, d, inputfile);
+
+    // generateRandomMatrix(A, 50, -1);
+    // generateRandomMatrix(B, 50, -1);
 
     printMat(A);
     printf("\n");
@@ -75,9 +82,10 @@ int main(int argc, char *argv[]) {
     printf("\n");
     printMat(C);
 
-    // Matrix* D = conventionalMult(A, B);
-    // printf("\n");
-    // printMat(D);
+    printf("THE CORRECT ONE\n");
+    Matrix* D = conventionalMult(A, B);
+    printf("\n");
+    printMat(D);
 
     return 0;
 }
@@ -366,6 +374,18 @@ Matrix* conventionalMult(Matrix* m1, Matrix* m2){
     }
     return res;
 };
+
+// Generates random matrix of dimension d of values {0, 1, 2} or {-1, 0, 1} if offset = -1
+void generateRandomMatrix(Matrix* mat, int d, int offset) {
+    // Reseed
+    srand (static_cast <unsigned> (time(0)));
+    for (int i = 0; i < d; i++) {
+        for (int j = 0; j < d; j++) {
+            int el = rand() % 3 + offset;
+            mat->values[i][j] = el;
+        }
+    }
+}
 
 // Frees matrix
 void freeMatrix(Matrix* mat) {
