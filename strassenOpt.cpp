@@ -18,7 +18,7 @@ struct Matrix{
 
 int numOpsForStrassen(int n0, int d);
 int calcPadding(int d, int n_0);
-Matrix* strassen(Matrix* m1, Matrix* m2, int flag, int n_0, Matrix** tempMatrices);
+Matrix* strassen(Matrix* m1, Matrix* m2, int flag, int n_0);
 Matrix* conventionalMult(Matrix* m1, Matrix* m2);
 int countTriangles(double p, int flag);
 
@@ -98,7 +98,7 @@ int main(int argc, char *argv[]) {
     // printMat(B);
     // printf("\n");
     printf("starting strassen's\n");
-    Matrix* C = strassen(A, B, flag, GLOBAL_N_0, tempMatrices);
+    Matrix* C = strassen(A, B, flag, GLOBAL_N_0);
     // printf("dimensions of strassen %i\n", C->dimension);
     if (flag != 1 && flag != 3) {
         C->dimension = d;
@@ -128,11 +128,13 @@ int main(int argc, char *argv[]) {
         printf("INCORRECT :( FUUUUU\n");
     }
 
-    for (int i = 0; i < 18; i++){
-        freeMatrix(tempMatrices[i]);
-    }
+    // for (int i = 0; i < 18; i++){
+    //     freeMatrix(tempMatrices[i]);
+    // }
 
-    printf("%i\n", numOpsForStrassen(40, 233));
+    // for (int i = 5; i < 100; i += 5) {
+    //     printf("n_0 = %i for n = %i, %i\n", i ,1600, numOpsForStrassen(i, 1600));
+    // }
 
     return 0;
 }
@@ -148,13 +150,13 @@ void runTests() {
     myfile.open("data.txt", ofstream::app);
     myfile << "n_0, dimension, time1, time2, time3, time4, time5, average" << endl;
 
-    for (int dim = 900; dim <= 900; dim += 51){
-        Matrix** tempMatrices = (Matrix**) malloc(18 * sizeof(Matrix*));
-        for (int i = 0; i < 18; i++){
-            tempMatrices[i] = initMatrix(dim + 2);
-        }
+    for (int dim = 1000; dim <= 1000; dim += 51){
+        // Matrix** tempMatrices = (Matrix**) malloc(18 * sizeof(Matrix*));
+        // for (int i = 0; i < 18; i++){
+        //     tempMatrices[i] = initMatrix(dim + 2);
+        // }
 
-        for (int test_n_0 = 35; test_n_0 <= 85; test_n_0 += 4){
+        for (int test_n_0 = 35; test_n_0 <= 155; test_n_0 += 10){
             myfile << test_n_0 << ", " << dim;
 
             // Test out strassen's algorithm 5 times
@@ -169,7 +171,7 @@ void runTests() {
                 generateRandomMatrix(B, dim, 0);
 
                 std::chrono::high_resolution_clock::time_point start = high_resolution_clock::now();
-                Matrix* strassenRes = strassen(A, B, 1, test_n_0, tempMatrices);
+                Matrix* strassenRes = strassen(A, B, 1, test_n_0);
                 std::chrono::high_resolution_clock::time_point end = high_resolution_clock::now();
                 duration<double, std::milli> ms_double = end - start;
                 myfile << ", " << ms_double.count();
@@ -197,17 +199,16 @@ void runTests() {
             }
             myfile << ", " << (totalTime / 5).count() << endl;
         }
-        for (int i = 0; i < 18; i++){
-            freeMatrix(tempMatrices[i]);
-        }
+        // for (int i = 0; i < 18; i++){
+        //     freeMatrix(tempMatrices[i]);
+        // }
     }
     
     myfile.close();
 };
 
 // main Strassen's algorithm to multiply matrices
-Matrix* strassen(Matrix* m1, Matrix* m2, int flag, int n_0, Matrix** tempMatrices){
-    
+Matrix* strassen(Matrix* m1, Matrix* m2, int flag, int n_0){
     int d = m1->dimension;
     if (d <= n_0) {
         //printf("\n new matrix sizes are %i and %i\n", m1->dimension, m2->dimension);
@@ -254,73 +255,93 @@ Matrix* strassen(Matrix* m1, Matrix* m2, int flag, int n_0, Matrix** tempMatrice
         printf("the dimensions are as follows: %i %i %i %i %i %i %i %i\n", A->dimension, B->dimension, C->dimension, D->dimension, E->dimension, F->dimension, G->dimension, H->dimension);
     }
 
+    Matrix* temp1 = initMatrix(A->dimension);
+    Matrix* temp2 = initMatrix(A->dimension);
     
-    int newDim = A->dimension; // newm1->dimension / 2;
-    tempMatrices[0]->dimension = newDim;
-    tempMatrices[0]->startRow = newDim;
-    tempMatrices[0]->startColumn = newDim;
-    tempMatrices[0] = addMatrices(F, H, tempMatrices[0], true);
-    Matrix* P1 = strassen(A, tempMatrices[0], flag, n_0, tempMatrices);
+    // int newDim = A->dimension; // newm1->dimension / 2;
+    // tempMatrices[0]->dimension = newDim;
+    // tempMatrices[0]->startRow = newDim;
+    // tempMatrices[0]->startColumn = newDim;
+    addMatrices(F, H, temp1, true);
+    Matrix* P1 = strassen(A, temp1, flag, n_0);
 
-    tempMatrices[1]->dimension = newDim;
-    tempMatrices[1]->startRow = newDim;
-    tempMatrices[1]->startColumn = newDim;
-    tempMatrices[1] = addMatrices(A, B, tempMatrices[1], false);
-    Matrix* P2 = strassen(tempMatrices[1], H, flag, n_0, tempMatrices);
+    // tempMatrices[1]->dimension = newDim;
+    // tempMatrices[1]->startRow = newDim;
+    // tempMatrices[1]->startColumn = newDim;
+    addMatrices(A, B, temp1, false);
+    Matrix* P2 = strassen(temp1, H, flag, n_0);
     
-    tempMatrices[2]->dimension = newDim;
-    tempMatrices[2]->startRow = newDim;
-    tempMatrices[2]->startColumn = newDim;
-    tempMatrices[2] = addMatrices(C, D, tempMatrices[2], false);
-    Matrix* P3 = strassen(tempMatrices[2], E, flag, n_0, tempMatrices);
+    // tempMatrices[2]->dimension = newDim;
+    // tempMatrices[2]->startRow = newDim;
+    // tempMatrices[2]->startColumn = newDim;
+    addMatrices(C, D, temp1, false);
+    Matrix* P3 = strassen(temp1, E, flag, n_0);
        
-    tempMatrices[3]->dimension = newDim;
-    tempMatrices[3]->startRow = newDim;
-    tempMatrices[3]->startColumn = newDim;
-    Matrix* P4 = strassen(D, addMatrices(G, E, tempMatrices[3], true), flag, n_0, tempMatrices);
+    // tempMatrices[3]->dimension = newDim;
+    // tempMatrices[3]->startRow = newDim;
+    // tempMatrices[3]->startColumn = newDim;
+    addMatrices(G, E, temp1, true);
+    Matrix* P4 = strassen(D, temp1, flag, n_0);
 
-    tempMatrices[4]->dimension = newDim;
-    tempMatrices[4]->startRow = newDim;
-    tempMatrices[4]->startColumn = newDim;
-    tempMatrices[5]->dimension = newDim;
-    tempMatrices[5]->startRow = newDim;
-    tempMatrices[5]->startColumn = newDim;
-    tempMatrices[4] = addMatrices(A, D, tempMatrices[4], false);
-    tempMatrices[5] = addMatrices(E, H, tempMatrices[5], false);
-    Matrix* P5 = strassen(tempMatrices[4], tempMatrices[5], flag, n_0, tempMatrices);
+    // tempMatrices[4]->dimension = newDim;
+    // tempMatrices[4]->startRow = newDim;
+    // tempMatrices[4]->startColumn = newDim;
+    // tempMatrices[5]->dimension = newDim;
+    // tempMatrices[5]->startRow = newDim;
+    // tempMatrices[5]->startColumn = newDim;
+    addMatrices(A, D, temp1, false);
+    addMatrices(E, H, temp2, false);
+    Matrix* P5 = strassen(temp1, temp2, flag, n_0);
 
-    tempMatrices[6]->dimension = newDim;
-    tempMatrices[6]->startRow = newDim;
-    tempMatrices[6]->startColumn = newDim;
-    tempMatrices[7]->dimension = newDim;
-    tempMatrices[7]->startRow = newDim;
-    tempMatrices[7]->startColumn = newDim;
-    tempMatrices[6] = addMatrices(B, D, tempMatrices[6], true);
-    tempMatrices[7] = addMatrices(G, H, tempMatrices[7], false);
-    Matrix* P6 = strassen(tempMatrices[6], tempMatrices[7], flag, n_0, tempMatrices);
+    // tempMatrices[6]->dimension = newDim;
+    // tempMatrices[6]->startRow = newDim;
+    // tempMatrices[6]->startColumn = newDim;
+    // tempMatrices[7]->dimension = newDim;
+    // tempMatrices[7]->startRow = newDim;
+    // tempMatrices[7]->startColumn = newDim;
+    addMatrices(B, D, temp1, true);
+    addMatrices(G, H, temp2, false);
+    Matrix* P6 = strassen(temp1, temp2, flag, n_0);
 
-    tempMatrices[8]->dimension = newDim;
-    tempMatrices[8]->startRow = newDim;
-    tempMatrices[8]->startColumn = newDim;
-    tempMatrices[9]->dimension = newDim;
-    tempMatrices[9]->startRow = newDim;
-    tempMatrices[9]->startColumn = newDim;
-    tempMatrices[8] = addMatrices(C, A, tempMatrices[8], true);
-    tempMatrices[9] = addMatrices(E, F, tempMatrices[9], false);
-    Matrix* P7 = strassen(tempMatrices[8], tempMatrices[9], flag, n_0, tempMatrices);
+    // tempMatrices[8]->dimension = newDim;
+    // tempMatrices[8]->startRow = newDim;
+    // tempMatrices[8]->startColumn = newDim;
+    // tempMatrices[9]->dimension = newDim;
+    // tempMatrices[9]->startRow = newDim;
+    // tempMatrices[9]->startColumn = newDim;
+    addMatrices(C, A, temp1, true);
+    addMatrices(E, F, temp2, false);
+    Matrix* P7 = strassen(temp1, temp2, flag, n_0);
 
 
     // free array holding split matrices
     free(matrices1);
     free(matrices2);
 
-    Matrix* topLeft = addMatrices(addMatrices(P4, P2, tempMatrices[10], true), addMatrices(P5, P6, tempMatrices[11], false), tempMatrices[12], false);
-    Matrix* topRight = addMatrices(P1, P2, tempMatrices[13], false);
-    Matrix* bottomLeft = addMatrices(P3, P4, tempMatrices[14], false);
-    Matrix* bottomRight = addMatrices(addMatrices(P1, P3, tempMatrices[15], true), addMatrices(P5, P7, tempMatrices[16], false), tempMatrices[17], false);
+    Matrix* Product = initMatrix(d);
+    // top left
+    Product->dimension = A->dimension;
+    addMatrices(addMatrices(P4, P2, temp1, true), addMatrices(P5, P6, temp2, false), Product, false);
 
-    Matrix* Product = initMatrix(d); 
-    combine(Product, topLeft, topRight, bottomLeft, bottomRight);
+    // top right
+    Product->startColumn = A->dimension;
+    addMatrices(P1, P2, Product, false);
+
+    // bottom right
+    Product->startRow = A->dimension;
+    addMatrices(addMatrices(P1, P3, temp1, true), addMatrices(P5, P7, temp2, false), Product, false);
+    
+    // bottom left
+    Product->startColumn = 0;
+    addMatrices(P3, P4, Product, false);
+
+    Product->dimension = d;
+    Product->startRow = 0;
+
+    freeMatrix(temp1);
+    freeMatrix(temp2);
+
+    // combine(Product, topLeft, topRight, bottomLeft, bottomRight);
     
     // get rid of extra 0 dimension if padded
     if ((flag == 1 || flag == 3 || flag == 4) && padded) {

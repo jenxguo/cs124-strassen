@@ -6,6 +6,7 @@
 #include <fstream>
 #include <iostream>
 #include <tuple>
+#include <chrono>
 using namespace std;
 
 
@@ -35,7 +36,7 @@ void freeMatrix(Matrix* mat);
 bool checkCorrectness(Matrix* A, Matrix* B);
 
 // Transition value of n to start using conventional mult alg
-int N_0 = 15;
+int N_0 = 90;
 
 int main(int argc, char *argv[]) {
 
@@ -83,17 +84,27 @@ int main(int argc, char *argv[]) {
     // printMat(B);
     // printf("\n");
 
+    using std::chrono::high_resolution_clock;
+    using std::chrono::duration;
+    using std::chrono::milliseconds;
+    std::chrono::high_resolution_clock::time_point start = high_resolution_clock::now();
+
     Matrix* C = strassen(A, B, flag);
     // printf("dimensions of strassen %i\n", C->dimension);
     if (flag != 1 && flag != 3) {
         C->dimension = d;
     }
 
-    // Print list of values of diagnoal entries
-    for (int i = 0; i < d; i++) {
-        printf("%i\n", C->values[i][i]);
-    }
-    printf("\n");
+    std::chrono::high_resolution_clock::time_point end = high_resolution_clock::now();
+    duration<double, std::milli> ms_double = end - start;
+
+    printf("Duration: %f\n", ms_double.count());
+
+    // // Print list of values of diagonal entries
+    // for (int i = 0; i < d; i++) {
+    //     printf("%i\n", C->values[i][i]);
+    // }
+    // printf("\n");
 
 
     // printf("\n");
@@ -108,11 +119,11 @@ int main(int argc, char *argv[]) {
     }
     // printMat(D);
 
-    // if (checkCorrectness(C, D)) {
-    //     printf("CORRECT\n");
-    // } else {
-    //     printf("INCORRECT :( FUUUUU\n");
-    // }
+    if (checkCorrectness(C, D)) {
+        printf("CORRECT\n");
+    } else {
+        printf("INCORRECT :( FUUUUU\n");
+    }
 
     // // THE TRIANGLE BS
     // // expected 178
@@ -188,6 +199,12 @@ void copyMatrix(Matrix* oldMat, Matrix* newMat) {
         for (int j = 0; j < d; j++) {
             newMat->values[i][j] = oldMat->values[oldMat->startRow + i][oldMat->startColumn + j];
         }
+    }
+
+    int newDim = newMat->dimension;
+    for (int k = 0; k < newDim; k++){
+        newMat->values[k][newDim-1] = 0;
+        newMat->values[newDim-1][k] = 0;
     }
 }
 
