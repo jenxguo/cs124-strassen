@@ -64,7 +64,7 @@ int main(int argc, char *argv[]) {
     // Initial Padding Method
     else {
         int pad = calcPadding(d);
-        printf("Padding: %i\n", pad);
+        // printf("Padding: %i\n", pad);
 
         A = initMatrix(pad);
         B = initMatrix(pad);
@@ -88,6 +88,13 @@ int main(int argc, char *argv[]) {
         C->dimension = d;
     }
 
+    // Print list of values of diagnoal entries
+    for (int i = 0; i < d; i++) {
+        printf("%i\n", C->values[i][i]);
+    }
+    printf("\n");
+
+
     // printf("\n");
     // printMat(C);
 
@@ -100,11 +107,11 @@ int main(int argc, char *argv[]) {
     }
     // printMat(D);
 
-    if (checkCorrectness(C, D)) {
-        printf("CORRECT\n");
-    } else {
-        printf("INCORRECT :( FUUUUU\n");
-    }
+    // if (checkCorrectness(C, D)) {
+    //     printf("CORRECT\n");
+    // } else {
+    //     printf("INCORRECT :( FUUUUU\n");
+    // }
 
     // // THE TRIANGLE BS
     // // expected 178
