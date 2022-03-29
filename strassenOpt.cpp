@@ -16,6 +16,7 @@ struct Matrix{
     int** values;
 };
 
+int numOpsForStrassen(int n0, int d);
 int calcPadding(int d, int n_0);
 Matrix* strassen(Matrix* m1, Matrix* m2, int flag, int n_0, Matrix** tempMatrices);
 Matrix* conventionalMult(Matrix* m1, Matrix* m2);
@@ -130,6 +131,8 @@ int main(int argc, char *argv[]) {
     for (int i = 0; i < 18; i++){
         freeMatrix(tempMatrices[i]);
     }
+
+    printf("%i\n", numOpsForStrassen(40, 233));
 
     return 0;
 }
@@ -585,6 +588,19 @@ void generateRandomMatrix(Matrix* mat, int d, int offset) {
 //     }
 //     return diagonalSum / 6;
 // }
+
+int numOpsForStrassen(int n0, int d) {
+    if (d <= 1) {
+        return 1;
+    }
+    if (d <= n0) {
+        return (2 * pow(d, 3)) - pow(d, 2);
+    }
+    if (d % 2 == 1) {
+        d+=1;
+    }
+    return 7*numOpsForStrassen(n0, d/2)+ 18*pow(d/2, 2);
+}
 
 // Frees matrix
 void freeMatrix(Matrix* mat) {

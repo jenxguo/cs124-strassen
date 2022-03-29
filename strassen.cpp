@@ -20,6 +20,7 @@ int calcPadding(int d);
 Matrix* strassen(Matrix* m1, Matrix* m2, int flag);
 Matrix* conventionalMult(Matrix* m1, Matrix* m2);
 int countTriangles(double p, int flag);
+int triangleTrial(int trials, double p, int flag);
 
 // Matrix Functions
 void generateRandomMatrix(Matrix* mat, int d, int offset);
@@ -115,15 +116,15 @@ int main(int argc, char *argv[]) {
 
     // // THE TRIANGLE BS
     // // expected 178
-    // printf("NumTriangles for p = .01: %i\n", countTriangles(.01, flag));
+    // printf("NumTriangles for p = .01: %i\n", triangleTrial(5, .01, flag));
     // // expected 1427
-    // printf("NumTriangles for p = .02: %i\n", countTriangles(.02, flag));
+    // printf("NumTriangles for p = .02: %i\n", triangleTrial(5, .02, flag));
     // // expected 4818
-    // printf("NumTriangles for p = .03: %i\n", countTriangles(.03, flag));
+    // printf("NumTriangles for p = .03: %i\n", triangleTrial(5, .03, flag));
     // // expected 11420
-    // printf("NumTriangles for p = .04: %i\n", countTriangles(.04, flag));
+    // printf("NumTriangles for p = .04: %i\n", triangleTrial(5, .04, flag));
     // // expected 22304
-    // printf("NumTriangles for p = .05: %i\n", countTriangles(.05, flag));
+    // printf("NumTriangles for p = .05: %i\n", triangleTrial(5, .05, flag));
 
     return 0;
 }
@@ -466,6 +467,14 @@ int countTriangles(double p, int flag) {
         diagonalSum += graphCubed->values[i][i];
     }
     return diagonalSum / 6;
+}
+
+int triangleTrial(int trials, double p, int flag) {
+    int sum = 0;
+    for (int i = 0; i < trials; i++) {
+        sum += countTriangles(p, flag);
+    }
+    return sum / trials;
 }
 
 // Frees matrix
