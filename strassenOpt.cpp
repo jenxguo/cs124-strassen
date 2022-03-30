@@ -8,7 +8,6 @@
 #include <chrono>
 using namespace std;
 
-
 struct Matrix{
     int startRow;
     int startColumn;
@@ -16,11 +15,11 @@ struct Matrix{
     int** values;
 };
 
-int numOpsForStrassen(int n0, int d);
 int calcPadding(int d, int n_0);
 Matrix* strassen(Matrix* m1, Matrix* m2, int flag, int n_0);
 Matrix* conventionalMult(Matrix* m1, Matrix* m2);
 int countTriangles(double p, int flag);
+int triangleTrial(int trials, double p, int flag);
 
 // Matrix Functions
 void generateRandomMatrix(Matrix* mat, int d, int offset);
@@ -80,8 +79,6 @@ int main(int argc, char *argv[]) {
     // Initial Padding Method
     else {
         int pad = calcPadding(d, GLOBAL_N_0);
-        //printf("Padding: %i\n", pad);
-
         A = initMatrix(pad);
         B = initMatrix(pad);
     }
@@ -93,48 +90,20 @@ int main(int argc, char *argv[]) {
         generateRandomMatrix(B, d, -1);
     }
 
-    // printMat(A);
-    // printf("\n");
-    // printMat(B);
-    // printf("\n");
-    printf("starting strassen's\n");
     Matrix* C = strassen(A, B, flag, GLOBAL_N_0);
-    // printf("dimensions of strassen %i\n", C->dimension);
     if (flag != 1 && flag != 3) {
         C->dimension = d;
     }
 
-    //printf("\n");
-    //printMat(C);
-
-    // printf("THE CORRECT ONE\n");
     Matrix* D = conventionalMult(A, B);
-    // printf("dimensions of orrect %i\n", D->dimension);
-    // printf("\n");
     if (flag != 1 && flag != 3) {
         D->dimension = d;
     }
-    //printMat(D);
-
 
     /* Required Output for Autograder*/
     for (int v = 0; v < d; v++){
         printf("%i\n", C->values[v][v]);
     }
-
-    if (checkCorrectness(C, D)) {
-        printf("CORRECT\n");
-    } else {
-        printf("INCORRECT :( FUUUUU\n");
-    }
-
-    // for (int i = 0; i < 18; i++){
-    //     freeMatrix(tempMatrices[i]);
-    // }
-
-    // for (int i = 5; i < 100; i += 5) {
-    //     printf("n_0 = %i for n = %i, %i\n", i ,1600, numOpsForStrassen(i, 1600));
-    // }
 
     return 0;
 }
@@ -148,22 +117,17 @@ void runTests() {
     // Open output file
     ofstream myfile;
     myfile.open("data.txt", ofstream::app);
-    myfile << "n_0, dimension, time1, time2, time3, time4, time5, average" << endl;
+    myfile << "n_0, dimension, time1, time2, time3, time4, time5, time6, time7, time8, time9, time10, average" << endl;
 
-    for (int dim = 1000; dim <= 1000; dim += 51){
-        // Matrix** tempMatrices = (Matrix**) malloc(18 * sizeof(Matrix*));
-        // for (int i = 0; i < 18; i++){
-        //     tempMatrices[i] = initMatrix(dim + 2);
-        // }
+    for (int dim = 1300; dim <= 1300; dim += 51){
 
-        for (int test_n_0 = 35; test_n_0 <= 155; test_n_0 += 10){
+        for (int test_n_0 = 115; test_n_0 <= 300; test_n_0 += 10){
             myfile << test_n_0 << ", " << dim;
 
-            // Test out strassen's algorithm 5 times
+            // Test for 10 trials
             duration<double, std::milli> totalTime;
-            for (int i = 0; i < 5; i++){
+            for (int i = 0; i < 10; i++){
                 // Randomly create matrices A and B
-                // int pad = calcPadding(dim, test_n_0);
                 Matrix* A = initMatrix(dim);
                 Matrix* B = initMatrix(dim);
 
@@ -183,25 +147,15 @@ void runTests() {
                 Matrix* convRes = conventionalMult(A, B);
                 if (checkCorrectness(strassenRes, convRes)) {
                     printf("yeet\n");
-                    // printMat(strassenRes);
-                    // printf("\n");
-                    // printMat(convRes);
                 } else {
                     printf("try again it's gon be all right\n");
-                    // printMat(strassenRes);
-                    // printf("\n");
-                    // printMat(convRes);
                 }
                 freeMatrix(A);
                 freeMatrix(B);
                 freeMatrix(strassenRes);
-                // freeMatrix(convRes);
             }
-            myfile << ", " << (totalTime / 5).count() << endl;
+            myfile << ", " << (totalTime / 10).count() << endl;
         }
-        // for (int i = 0; i < 18; i++){
-        //     freeMatrix(tempMatrices[i]);
-        // }
     }
     
     myfile.close();
@@ -211,7 +165,6 @@ void runTests() {
 Matrix* strassen(Matrix* m1, Matrix* m2, int flag, int n_0){
     int d = m1->dimension;
     if (d <= n_0) {
-        //printf("\n new matrix sizes are %i and %i\n", m1->dimension, m2->dimension);
         return conventionalMult(m1, m2);
     }
 
@@ -221,16 +174,12 @@ Matrix* strassen(Matrix* m1, Matrix* m2, int flag, int n_0){
 
     // pad if odd d
     if ((flag == 1 || flag == 3 || flag == 4) && (d % 2) == 1) {
-        // sizeUp(m1);
-        // sizeUp(m2);
         newm1 = initMatrix(d+1);
         newm2 = initMatrix(d+1);
         copyMatrix(m1, newm1);
         copyMatrix(m2, newm2);
         d += 1;
         padded = true;
-        // freeMatrix(m1);
-        // freeMatrix(m2);
     } 
     else {
         newm1 = m1;
@@ -258,57 +207,26 @@ Matrix* strassen(Matrix* m1, Matrix* m2, int flag, int n_0){
     Matrix* temp1 = initMatrix(A->dimension);
     Matrix* temp2 = initMatrix(A->dimension);
     
-    // int newDim = A->dimension; // newm1->dimension / 2;
-    // tempMatrices[0]->dimension = newDim;
-    // tempMatrices[0]->startRow = newDim;
-    // tempMatrices[0]->startColumn = newDim;
     addMatrices(F, H, temp1, true);
     Matrix* P1 = strassen(A, temp1, flag, n_0);
 
-    // tempMatrices[1]->dimension = newDim;
-    // tempMatrices[1]->startRow = newDim;
-    // tempMatrices[1]->startColumn = newDim;
     addMatrices(A, B, temp1, false);
     Matrix* P2 = strassen(temp1, H, flag, n_0);
     
-    // tempMatrices[2]->dimension = newDim;
-    // tempMatrices[2]->startRow = newDim;
-    // tempMatrices[2]->startColumn = newDim;
     addMatrices(C, D, temp1, false);
     Matrix* P3 = strassen(temp1, E, flag, n_0);
-       
-    // tempMatrices[3]->dimension = newDim;
-    // tempMatrices[3]->startRow = newDim;
-    // tempMatrices[3]->startColumn = newDim;
+
     addMatrices(G, E, temp1, true);
     Matrix* P4 = strassen(D, temp1, flag, n_0);
 
-    // tempMatrices[4]->dimension = newDim;
-    // tempMatrices[4]->startRow = newDim;
-    // tempMatrices[4]->startColumn = newDim;
-    // tempMatrices[5]->dimension = newDim;
-    // tempMatrices[5]->startRow = newDim;
-    // tempMatrices[5]->startColumn = newDim;
     addMatrices(A, D, temp1, false);
     addMatrices(E, H, temp2, false);
     Matrix* P5 = strassen(temp1, temp2, flag, n_0);
 
-    // tempMatrices[6]->dimension = newDim;
-    // tempMatrices[6]->startRow = newDim;
-    // tempMatrices[6]->startColumn = newDim;
-    // tempMatrices[7]->dimension = newDim;
-    // tempMatrices[7]->startRow = newDim;
-    // tempMatrices[7]->startColumn = newDim;
     addMatrices(B, D, temp1, true);
     addMatrices(G, H, temp2, false);
     Matrix* P6 = strassen(temp1, temp2, flag, n_0);
 
-    // tempMatrices[8]->dimension = newDim;
-    // tempMatrices[8]->startRow = newDim;
-    // tempMatrices[8]->startColumn = newDim;
-    // tempMatrices[9]->dimension = newDim;
-    // tempMatrices[9]->startRow = newDim;
-    // tempMatrices[9]->startColumn = newDim;
     addMatrices(C, A, temp1, true);
     addMatrices(E, F, temp2, false);
     Matrix* P7 = strassen(temp1, temp2, flag, n_0);
@@ -317,6 +235,8 @@ Matrix* strassen(Matrix* m1, Matrix* m2, int flag, int n_0){
     // free array holding split matrices
     free(matrices1);
     free(matrices2);
+
+    // combine matrices by putting into prodct
 
     Matrix* Product = initMatrix(d);
     // top left
@@ -340,8 +260,6 @@ Matrix* strassen(Matrix* m1, Matrix* m2, int flag, int n_0){
 
     freeMatrix(temp1);
     freeMatrix(temp2);
-
-    // combine(Product, topLeft, topRight, bottomLeft, bottomRight);
     
     // get rid of extra 0 dimension if padded
     if ((flag == 1 || flag == 3 || flag == 4) && padded) {
@@ -376,38 +294,7 @@ Matrix* addMatrices(Matrix* A, Matrix* B, Matrix* res, bool subtract) {
     return res;
 }
 
-// Combines 4 matrices to one big matrix
-void combine(Matrix* Product, Matrix* TL, Matrix* TR, Matrix* BL, Matrix* BR){
-    int halfDim = Product->dimension / 2;
-
-    for (int i = 0; i < halfDim; i++){
-        for (int j = 0; j < halfDim; j++){
-            Product->values[i][j] = TL->values[i][j];
-            
-        }
-    }
-    
-    for (int i = 0; i < halfDim; i++){
-        for (int j = 0; j < halfDim; j++){
-            Product->values[i][j + halfDim] = TR->values[i][j];
-        }
-    }
-
-    for (int i = 0; i < halfDim; i++){
-        for (int j = 0; j < halfDim; j++){
-            Product->values[i + halfDim][j] = BL->values[i][j];
-        }
-    }
-
-    for (int i = 0; i < halfDim; i++){
-        for (int j = 0; j < halfDim; j++){
-            Product->values[i + halfDim][j + halfDim] = BR->values[i][j];
-        }
-    }
-
-}
-
-
+// Compares matrix A to B and returns true if identical
 bool checkCorrectness(Matrix* A, Matrix* B) {
     int d = A->dimension;
     if (d != B->dimension) {
@@ -468,7 +355,6 @@ void copyMatrix(Matrix* oldMat, Matrix* newMat) {
             newMat->values[i][j] = oldMat->values[oldMat->startRow + i][oldMat->startColumn + j];
         }
     }
-
     int newDim = newMat->dimension;
     for (int k = 0; k < newDim; k++){
         newMat->values[k][newDim-1] = 0;
@@ -553,8 +439,6 @@ Matrix** splitMatrices(Matrix* original){
     return res;
 };
 
-
-
 // Conventional algorithm to multiply matrices
 Matrix* conventionalMult(Matrix* m1, Matrix* m2){
     int d = m1->dimension;
@@ -586,41 +470,38 @@ void generateRandomMatrix(Matrix* mat, int d, int offset) {
     }
 }
 
-// int countTriangles(double p, int flag) {
-//     srand (static_cast <unsigned> (time(0)));
-//     int size = 1024;
-//     Matrix* graph = initMatrix(size);
-//     for (int i = 0; i < size; i++) {
-//         for (int j = 0; j < size; j++) {
-//             int el;
-//             if (rand() <  p * ((double)RAND_MAX + 1.0)) {
-//                 el = 1;
-//             } else {
-//                 el = 0;
-//             }
-//             graph->values[i][j] = el;
-//         }
-//     }
-//     Matrix* graphSquared = strassen(graph, graph, flag, GLOBAL_N_0);
-//     Matrix* graphCubed = strassen(graphSquared, graph, flag, GLOBAL_N_0);
-//     int diagonalSum = 0;
-//     for (int i = 0; i < size; i++) {
-//         diagonalSum += graphCubed->values[i][i];
-//     }
-//     return diagonalSum / 6;
-// }
+// generates random 1024 x 1024 matrix representation of graph and calculates number of triangles
+int countTriangles(double p, int flag) {
+    srand (static_cast <unsigned> (time(0)));
+    int size = 1024;
+    Matrix* graph = initMatrix(size);
+    for (int i = 0; i < size; i++) {
+        for (int j = 0; j < size; j++) {
+            int el;
+            if (rand() <  p * ((double)RAND_MAX + 1.0)) {
+                el = 1;
+            } else {
+                el = 0;
+            }
+            graph->values[i][j] = el;
+        }
+    }
+    Matrix* graphSquared = strassen(graph, graph, flag, GLOBAL_N_0);
+    Matrix* graphCubed = strassen(graphSquared, graph, flag, GLOBAL_N_0);
+    int diagonalSum = 0;
+    for (int i = 0; i < size; i++) {
+        diagonalSum += graphCubed->values[i][i];
+    }
+    return diagonalSum / 6;
+}
 
-int numOpsForStrassen(int n0, int d) {
-    if (d <= 1) {
-        return 1;
+// Finds average number of triangles for certain number of trials
+int triangleTrial(int trials, double p, int flag) {
+    int sum = 0;
+    for (int i = 0; i < trials; i++) {
+        sum += countTriangles(p, flag);
     }
-    if (d <= n0) {
-        return (2 * pow(d, 3)) - pow(d, 2);
-    }
-    if (d % 2 == 1) {
-        d+=1;
-    }
-    return 7*numOpsForStrassen(n0, d/2)+ 18*pow(d/2, 2);
+    return sum / trials;
 }
 
 // Frees matrix
