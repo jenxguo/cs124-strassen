@@ -145,11 +145,6 @@ void runTests() {
                     totalTime += ms_double;
                 }
                 Matrix* convRes = conventionalMult(A, B);
-                if (checkCorrectness(strassenRes, convRes)) {
-                    printf("yeet\n");
-                } else {
-                    printf("try again it's gon be all right\n");
-                }
                 freeMatrix(A);
                 freeMatrix(B);
                 freeMatrix(strassenRes);
