@@ -144,7 +144,7 @@ void runTests() {
                 } else {
                     totalTime += ms_double;
                 }
-                Matrix* convRes = conventionalMult(A, B);
+                // Matrix* convRes = conventionalMult(A, B);
                 freeMatrix(A);
                 freeMatrix(B);
                 freeMatrix(strassenRes);
